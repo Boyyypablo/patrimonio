@@ -42,7 +42,7 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <main className="login-main">
-        <img src="/brand/mutua-logo.png" width={240} height={67} decoding="async" alt="Mútua" className="login-logo" />
+        <img src="/assets/778f5.png" width={240} height={67} decoding="async" alt="Mútua" className="login-logo" />
         <form className="login-card" onSubmit={submit} noValidate>
           <div className="login-field">
             <label htmlFor="email">E-mail</label>

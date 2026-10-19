@@ -11,6 +11,7 @@ import {
   parsePeriod,
   parseTag,
   periodBR,
+  periodBreakdown,
   startAccounting,
 } from "./domain.ts";
 
@@ -62,6 +63,20 @@ describe("Governança patrimonial", () => {
     assert.equal(state.assets.find((item) => item.tag === "12316")?.history.length, 5);
     assert.throws(() => changeAsset(state, "12316", "Transferência", {}), /baixado/);
     assert.throws(() => changeAsset(state, "12316", "Adição", { value: 350 }), /baixado/);
+  });
+
+  it("detalha bens, exclusões e composição da competência", () => {
+    const state = initialState();
+    const breakdown = periodBreakdown(state, "2026-10");
+    assert.equal(breakdown.lines.length, 9);
+    assert.ok(breakdown.excluded.some((item) => item.reason === "Baixado"));
+    assert.ok(breakdown.monthly > 0);
+    assert.equal(
+      Number(breakdown.book.toFixed(2)),
+      Number((breakdown.residual + breakdown.base).toFixed(2)),
+    );
+    const sumMonthly = breakdown.lines.reduce((n, line) => n + line.monthly, 0);
+    assert.equal(Number(breakdown.monthly.toFixed(4)), Number(sumMonthly.toFixed(4)));
   });
 
   it("exige cálculo antes de contabilização", () => {

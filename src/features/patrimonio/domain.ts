@@ -70,6 +70,25 @@ export function competence(state:State,period:string){
  const stage=(kind:Processing['kind'])=>{const job=state.jobs.find(j=>j.period===period&&j.kind===kind);const done=kind==='Cálculo'?record?.calculated:record?.posted;const date=kind==='Cálculo'?record?.calculatedAt:record?.postedAt;const status:AccountingStatus=job?job.status==='Em processamento'?'Em andamento':job.status:done?'Concluído':'Não iniciado';return {status,date:job?(job.completedAt??(job.status==='Concluído'?date:job.date)):date};};
  return {period,calculation:stage('Cálculo'),posting:stage('Contabilização'),count:record?.count??(record?state.assets.filter(a=>a.status!=='Baixado'&&depreciation(a,period).length>0).length:0),total:record?.total??0,posted:record?.posted??false};
 }
+/** Detalhamento da competência: itens elegíveis, exclusões e composição do total. */
+export function periodBreakdown(state:State,period:string){
+ const lines=state.assets.flatMap(asset=>{
+  if(asset.status==='Baixado')return [];
+  const rows=depreciation(asset,period);
+  if(!rows.length)return [];
+  const last=rows.at(-1)!;
+  const residual=Math.min(asset.book,asset.value*asset.residual/100);
+  return [{tag:asset.tag,name:asset.name,status:asset.status,book:asset.book,residual,base:Math.max(0,asset.book-residual),monthly:last.monthly,accumulated:last.accumulated,net:last.net,months:rows.length}];
+ });
+ const excluded=state.assets.filter(a=>a.status==='Baixado'||depreciation(a,period).length===0).map(a=>({tag:a.tag,name:a.name,reason:a.status==='Baixado'?'Baixado':'Sem depreciação no período'}));
+ const book=lines.reduce((s,l)=>s+l.book,0);
+ const residual=lines.reduce((s,l)=>s+l.residual,0);
+ const base=lines.reduce((s,l)=>s+l.base,0);
+ const monthly=lines.reduce((s,l)=>s+l.monthly,0);
+ const accumulated=lines.reduce((s,l)=>s+l.accumulated,0);
+ const net=lines.reduce((s,l)=>s+l.net,0);
+ return {lines,excluded,book,residual,base,monthly,accumulated,net};
+}
 export function startAccounting(state:State,period:string,kind:Processing['kind'],now=Date.now()):State{
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period))throw new Error('Informe uma competência válida no formato MM/AAAA.');
  if(state.jobs.some(j=>j.period===period&&j.status==='Em processamento'))throw new Error('Aguarde a conclusão desta competência.');

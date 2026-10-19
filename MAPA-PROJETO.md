@@ -1,5 +1,7 @@
 # Fluxos de Paginas — Gestao de Patrimonio Mutua
 
+> **Prototipo front-end.** Os fluxos abaixo refletem o comportamento atual, com dados na sessao do navegador, login simulado e jobs de contabilizacao simulados. Regras, persistencia e autenticacao serao fechadas na integracao com o backend.
+
 Documento otimizado para o Figma MCP (`generate_diagram` / FigJam).
 Cada bloco Mermaid abaixo pode ser colado ou enviado direto ao plugin para gerar o diagrama editavel.
 
@@ -27,8 +29,9 @@ Use esta lista ao criar frames de UI no Figma Design. Cada linha = 1 tela/frame.
 | patrimNovo | `/patrimonios/novo` | Patrimonios - Novo bem | pagina |
 | patrimFicha | `/patrimonios/:tag` | Patrimonios - Ficha | pagina |
 | patrimPlaqueta | `/patrimonios/plaqueta` | Patrimonios - Gerar plaqueta | pagina |
-| movLote | `/movimentacao` | Movimentacao - Lote | pagina |
+| movEntrada | `/movimentacao` | Redireciona para Transferir um bem | redirect |
 | movUm | `/movimentacao/transferir` | Movimentacao - Transferir um bem | pagina |
+| movLote | `/movimentacao/lote` | Movimentacao - Transferencia em lote | pagina |
 | contab | `/contabilizacao` | Contabilizacao | pagina |
 | cadastros | `/cadastros` | Cadastros auxiliares | pagina |
 | lerQr | `/ler-qr` | Ler QR Code | pagina |
@@ -58,14 +61,21 @@ Use esta lista ao criar frames de UI no Figma Design. Cada linha = 1 tela/frame.
 | modalPreviewAnexo | Ficha | Modal - Preview de anexo |
 | dialogQrCamera | Lista / shell | Dialog - Ler QR (camera) |
 | dialogQrFoto | Lista / shell | Dialog - Enviar foto do QR |
+| umStep1 | Transferir um bem | Etapa 1 - Escolher o bem |
+| umStep2 | Transferir um bem | Etapa 2 - Destino |
+| umReview | Transferir um bem | Dialog - Revisar transferencia |
+| loteStep1 | Movimentacao lote | Etapa 1 - Escolher bens (Marcar / Colar / Faixa) |
+| loteStep2 | Movimentacao lote | Etapa 2 - Destino comum |
 | loteReview | Movimentacao lote | Dialog - Confirmar lote |
-| loteResultado | Movimentacao lote | Secao - Resultado do lote |
+| loteResultado | Movimentacao lote | Secao - Resultado do lote (somente nesta visita) |
 | novoStep1 | Novo bem | Wizard - Etapa Geral |
 | novoStep2 | Novo bem | Wizard - Etapa Aquisicao |
 | novoStep3 | Novo bem | Wizard - Etapa Localizacao |
-| contabCalc | Contabilizacao | Secao - Calcular periodo |
-| contabPost | Contabilizacao | Secao - Contabilizar |
-| contabLista | Contabilizacao | Secao - Lista de competencias |
+| contabPeriodo | Contabilizacao | Card - Competencia do periodo |
+| contabCalc | Contabilizacao | Etapa 1 - Calcular periodo |
+| contabPost | Contabilizacao | Etapa 2 - Contabilizar |
+| contabResumo | Contabilizacao | Resumo do periodo (abre sob demanda) |
+| contabLista | Contabilizacao | Card - Lista de competencias |
 | cadDomain | Cadastros | Lista do dominio selecionado |
 | cadCreate | Cadastros | Modal - Incluir / editar item |
 | cadDelete | Cadastros | Modal - Excluir item |
@@ -84,8 +94,9 @@ flowchart TD
   patrimNovo["Novo bem /patrimonios/novo"]
   patrimFicha["Ficha /patrimonios/:tag"]
   patrimPlaqueta["Gerar plaqueta /patrimonios/plaqueta"]
-  movLote["Movimentacao lote /movimentacao"]
+  movEntrada{{"/movimentacao redirect"}}
   movUm["Transferir um bem /movimentacao/transferir"]
+  movLote["Transferencia em lote /movimentacao/lote"]
   contab["Contabilizacao /contabilizacao"]
   cadastros["Cadastros /cadastros"]
   lerQr["Ler QR /ler-qr"]
@@ -94,7 +105,8 @@ flowchart TD
   home -->|"Sair"| login
 
   home ==> patrimList
-  home ==> movLote
+  home ==> movUm
+  movEntrada --> movUm
   home ==> contab
   home ==> lerQr
   home ==> cadastros
@@ -110,8 +122,9 @@ flowchart TD
   patrimFicha --> movUm
   patrimFicha --> patrimPlaqueta
 
-  movLote --> movUm
+  movUm <-->|"abas"| movLote
   movUm -->|"sucesso"| patrimFicha
+  movLote -->|"resultado"| patrimFicha
 
   lerQr -->|"tag valida"| patrimFicha
   patrimPlaqueta -.->|"anexa QR"| patrimFicha
@@ -122,6 +135,8 @@ flowchart TD
 ---
 
 ## DIAGRAMA 02 — Autenticacao e shell
+
+Login simulado: qualquer e-mail valido e senha preenchida entram. No prototipo, as rotas internas ainda nao exigem login; a protecao vem com a autenticacao do backend.
 
 ```mermaid
 flowchart LR
@@ -211,59 +226,66 @@ flowchart TD
 
 ---
 
-## DIAGRAMA 05 — Movimentacao (lote + um bem)
+## DIAGRAMA 05 — Movimentacao (um bem + lote)
+
+A entrada padrao e Transferir um bem; as abas alternam entre os dois fluxos.
 
 ```mermaid
 flowchart TD
-  home(["Home"]) --> movLote["Movimentacao em lote"]
-  movLote --> nav{"Acao"}
+  home(["Home"]) --> movUm["Transferir um bem"]
+  entrada{{"/movimentacao"}} --> movUm
+  fichaEntry(["Ficha do bem"]) -->|"Transferir ?tag="| movUm
+  movUm <-->|"abas"| movLote["Transferencia em lote"]
 
-  nav -->|"Nova transferencia"| pickMode{"Modo de selecao"}
-  nav -->|"Historico"| hist["Secao Resultado do lote"]
-  nav -->|"Transferir um bem"| movUm["Pagina Transferir um bem"]
+  movUm --> umStep1["Etapa 1 Escolher o bem"]
+  umStep1 -->|"plaqueta ou lista"| umStep2["Etapa 2 Destino"]
+  umStep2 --> umReview["Dialog Revisar"]
+  umReview -->|"confirmar"| ficha["Ficha ?aba=Transferencias"]
 
-  pickMode -->|"Selecao"| selTable["Tabela com checkboxes"]
-  pickMode -->|"Lista"| selList["Textarea de plaquetas"]
-  pickMode -->|"Intervalo"| selRange["Plaqueta inicial e final"]
-
-  selTable --> dest["Formulario destino comum"]
-  selList --> dest
-  selRange --> dest
-
-  dest --> review["Dialog Revisar lote"]
-  review -->|"confirmar"| results["Resultado por plaqueta"]
-  results --> hist
-
-  movUm --> searchTag["Buscar plaqueta"]
-  searchTag --> formOne["Formulario destino"]
-  formOne -->|"confirmar"| ficha["Ficha ?aba=Transferencias"]
-
-  fichaEntry(["Ficha do bem"]) -->|"Transferir"| movUm
+  movLote --> loteStep1["Etapa 1 Escolher bens"]
+  loteStep1 --> pickMode{"Modo"}
+  pickMode -->|"Marcar na lista"| selTable["Tabela com checkboxes"]
+  pickMode -->|"Colar plaquetas"| selList["Textarea de plaquetas"]
+  pickMode -->|"Faixa de numeros"| selRange["Plaqueta inicial e final"]
+  selTable --> loteStep2["Etapa 2 Destino comum"]
+  selList --> loteStep2
+  selRange --> loteStep2
+  loteStep2 --> loteReview["Dialog Revisar lote"]
+  loteReview -->|"confirmar"| results["Resultado por plaqueta"]
+  results -->|"abrir ficha"| ficha
 ```
 
 ---
 
 ## DIAGRAMA 06 — Contabilizacao (etapas subsequentes)
 
+Pagina em coluna unica (cards empilhados). O resumo fica oculto ate o usuario clicar em "Ver resumo do periodo".
+
 ```mermaid
 flowchart TD
   home(["Home"]) --> contab["Contabilizacao"]
-  contab --> inputPeriod["Informar competencia MM/AAAA"]
-  inputPeriod -->|"Consultar"| summary["Resumo do periodo"]
+  contab --> inputPeriod["Card Competencia MM/AAAA"]
+  inputPeriod -->|"Consultar"| etapas["Card Etapas da competencia"]
 
-  summary --> step1["Etapa 1 Calcular"]
-  step1 -->|"job ~1.2s"| calcDone{"Calculo concluido?"}
+  etapas --> step1["Etapa 1 Calcular"]
+  step1 -->|"job simulado ~1.2s"| calcDone{"Calculo concluido?"}
   calcDone -->|"sim"| step2["Etapa 2 Contabilizar"]
   calcDone -->|"erro"| step1
-  step2 -->|"job ~1.2s"| postDone{"Contabilizado?"}
+  step2 -->|"job simulado ~1.2s"| postDone{"Contabilizado?"}
   postDone -->|"sim"| locked["Competencia fechada"]
   postDone -->|"erro"| step2
 
-  summary --> lista["Lista de competencias"]
+  etapas -->|"Ver resumo"| resumo["Resumo do periodo"]
+  resumo --> composicao["Composicao: contabil - residual = base / 60"]
+  resumo --> itens["Bens no calculo + soma"]
+  resumo --> excluidos["Bens excluidos"]
+  resumo -->|"Ocultar"| etapas
+
+  contab --> lista["Card Lista de competencias"]
   lista -->|"selecionar outra"| inputPeriod
-  contab -.->|"ancora"| step2
-  contab -.->|"ancora"| lista
 ```
+
+Regra da projecao (prototipo): `residual = min(contabil, aquisicao x residual%)`, `base = contabil - residual`, `mensal = base / 60`. A contabilizacao nao altera o valor contabil dos bens nesta versao.
 
 ---
 
@@ -332,7 +354,8 @@ flowchart LR
   lista ==> novo["Novo bem"]
   novo ==> ficha3["Ficha do novo"]
   ficha3 ==> plaqueta["Gerar plaqueta"]
-  home ==> lote["Movimentacao lote"]
+  home ==> movUm2["Transferir um bem"]
+  movUm2 ==> lote["Transferencia em lote"]
   lote ==> resultado["Resultado lote"]
   home ==> contab["Contabilizacao"]
   contab ==> calc["Calcular"]
@@ -372,13 +395,17 @@ cadastros por dominio, QR e wizard de novo bem devem aparecer.
 | Ficha | Plaqueta | botao Gerar plaqueta |
 | Ficha | Modais | acoes das abas |
 | Ficha Baixado | bloqueio | sem transferencia/adicao |
-| Lote | Transferir um | link na nav |
-| Lote | Dialog review | Revisar transferencia |
+| Home / `/movimentacao` | Transferir um | card Movimentacao / redirect |
+| Transferir um | Lote | aba Transferencia em lote |
+| Lote | Transferir um | aba Transferir um bem |
+| Lote | Etapa 2 Destino | Continuar para o destino |
+| Lote | Dialog review | Revisar lote |
 | Lote | Resultado | confirmar lote |
 | Transferir um | Ficha?aba=Transferencias | sucesso |
 | Contabilizacao | Calcular | Etapa 1 |
 | Contabilizacao | Contabilizar | Etapa 2 apos calculo |
+| Contabilizacao | Resumo do periodo | Ver resumo do periodo |
 | Cadastros | 9 listas | `?lista=` |
 | Ler QR | Ficha | tag reconhecida |
-| Qualquer shell | Home | Voltar ou Logo |
+| Qualquer shell | Home | Voltar ao inicio, trilha Inicio ou Logo |
 | Menu usuario | Login | Sair |
