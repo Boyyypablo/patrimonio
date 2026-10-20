@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@/lib/navigation";
-import { ArrowLeft, ArrowLeftRight, LockKeyhole, Search } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,16 +14,17 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { usePatrimonio } from "./store";
-import { changeAsset, dateBR, money, today, type DomainKey } from "./domain";
+import { changeAsset, dateBR, emptyFilters, filterAssets, money, today, type DomainKey } from "./domain";
 import { PageHeading, Field, DomainSelect, StatusBadge, Info } from "./shared";
 import { MovementTabs } from "./movement-tabs";
+import { AssetFilters } from "./asset-filters";
 
 export function TransferPage({ initial }: { initial?: string | undefined }) {
   const { state, update } = usePatrimonio();
   const navigate = useNavigate();
   const start = state.assets.find((a) => a.tag === initial);
   const [tag, setTag] = useState(start && start.status !== "Baixado" ? start.tag : "");
-  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState(emptyFilters);
   const [tagInput, setTagInput] = useState(initial ?? "");
   const [review, setReview] = useState(false);
   const asset = state.assets.find((a) => a.tag === tag);
@@ -45,14 +46,11 @@ export function TransferPage({ initial }: { initial?: string | undefined }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const rows = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    return state.assets.filter((a) => {
-      if (a.status === "Baixado") return false;
-      if (!q) return true;
-      return `${a.tag} ${a.name} ${a.branch} ${a.location}`.toLowerCase().includes(q);
-    });
-  }, [state.assets, query]);
+  const available = useMemo(
+    () => state.assets.filter((a) => a.status !== "Baixado"),
+    [state.assets],
+  );
+  const rows = useMemo(() => filterAssets(available, filters), [available, filters]);
 
   function pick(t: string) {
     const a = state.assets.find((x) => x.tag === t);
@@ -175,15 +173,12 @@ export function TransferPage({ initial }: { initial?: string | undefined }) {
               <span>ou busque na lista</span>
             </div>
 
-            <label className="home-search transfer-search">
-              <Search size={16} aria-hidden />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar por plaqueta, nome, filial ou localização..."
-                aria-label="Buscar patrimônio"
-              />
-            </label>
+            <AssetFilters
+              assets={available}
+              value={filters}
+              onChange={setFilters}
+              resultCount={rows.length}
+            />
 
             <ul className="pick-list">
               {rows.slice(0, 50).map((a) => (
@@ -203,12 +198,12 @@ export function TransferPage({ initial }: { initial?: string | undefined }) {
             </ul>
             {!rows.length && (
               <p className="p-6 text-center text-sm text-muted-foreground">
-                Nenhum patrimônio disponível. Ajuste a busca.
+                Nenhum patrimônio encontrado. Ajuste a busca ou os filtros.
               </p>
             )}
             {rows.length > 50 && (
               <p className="p-4 text-center text-sm text-muted-foreground">
-                Mostrando 50 de {rows.length}. Refine a busca para encontrar o bem.
+                Mostrando 50 de {rows.length}. Refine a busca ou os filtros para encontrar o bem.
               </p>
             )}
           </section>
