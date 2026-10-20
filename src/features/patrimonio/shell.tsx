@@ -55,7 +55,7 @@ export const modules: {
     ],
   },
   {
-    to: "/movimentacao/transferir",
+    to: "/movimentacao",
     label: "Movimentação",
     homeLabel: "Movimentação",
     category: "gestao",

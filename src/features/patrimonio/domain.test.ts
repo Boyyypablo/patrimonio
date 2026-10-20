@@ -5,7 +5,11 @@ import {
   changeAsset,
   competence,
   createAsset,
+  activeFilterCount,
   depreciation,
+  emptyFilters,
+  facetOptions,
+  filterAssets,
   finishAccounting,
   initialState,
   parsePeriod,
@@ -140,6 +144,33 @@ describe("Competências mensais", () => {
     assert.equal(competence(state, "2026-10").calculation.status, "Concluído");
     assert.equal(state.jobs.length, 2);
     assert.equal(state.jobs[1]?.status, "Erro");
+  });
+});
+
+describe("Filtros de bens", () => {
+  const assets = initialState().assets;
+  const tags = (list: { tag: string }[]) => list.map((a) => a.tag).sort();
+
+  it("combina filtros diferentes com E e valores do mesmo filtro com OU", () => {
+    const f = { ...emptyFilters(), branch: ["Mútua-AC"], location: ["Recepção"] };
+    assert.deepEqual(tags(filterAssets(assets, f)), ["12308", "12316"]);
+    const orLocations = { ...f, location: ["Recepção", "Sala de TI"] };
+    assert.deepEqual(tags(filterAssets(assets, orLocations)), ["12308", "12310", "12314", "12316"]);
+    assert.deepEqual(tags(filterAssets(assets, { ...orLocations, status: ["Avariado"] })), ["12310"]);
+  });
+
+  it("filtra por faixa de valor contábil e por texto", () => {
+    const range = { ...emptyFilters(), minValue: "1.000", maxValue: "2000" };
+    assert.deepEqual(tags(filterAssets(assets, range)), ["12308", "12309", "12314"]);
+    assert.deepEqual(tags(filterAssets(assets, { ...emptyFilters(), query: "dell" })), ["12307", "12309"]);
+    assert.equal(activeFilterCount({ ...range, branch: ["Mútua-AC", "Mútua-DF"] }), 4);
+  });
+
+  it("conta as opções considerando os demais filtros", () => {
+    const options = facetOptions(assets, { ...emptyFilters(), location: ["Recepção"], branch: ["Mútua-SP"] }, "branch");
+    assert.equal(options.find((o) => o.value === "Mútua-AC")?.count, 2);
+    assert.equal(options.find((o) => o.value === "Mútua-DF")?.count, 1);
+    assert.equal(options.find((o) => o.value === "Mútua-SP")?.count, 0);
   });
 });
 

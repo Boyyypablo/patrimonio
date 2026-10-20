@@ -31,7 +31,7 @@ npm run build
 | `/patrimonios/novo` | Cadastro em 3 etapas |
 | `/patrimonios/[tag]` | Ficha do bem (8 abas; `?aba=` abre uma aba) |
 | `/patrimonios/plaqueta` | Gerar etiqueta com QR Code (`?tag=`) |
-| `/movimentacao` | Redireciona para `/movimentacao/transferir` |
+| `/movimentacao` | Redireciona para `/movimentacao/transferir` (307, em `next.config.ts`) |
 | `/movimentacao/transferir` | Transferir um bem (`?tag=`) |
 | `/movimentacao/lote` | Transferência em lote |
 | `/contabilizacao` | Cálculo e contabilização por competência |

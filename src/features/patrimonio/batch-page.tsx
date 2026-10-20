@@ -14,9 +14,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { usePatrimonio } from "./store";
-import { changeAsset, dateBR, today, type DomainKey } from "./domain";
-import { PageHeading, Field, DomainSelect, AssetTable, SearchInput, StatusBadge } from "./shared";
+import { changeAsset, dateBR, emptyFilters, filterAssets, today, type DomainKey } from "./domain";
+import { PageHeading, Field, DomainSelect, AssetTable, StatusBadge } from "./shared";
 import { MovementTabs } from "./movement-tabs";
+import { AssetFilters } from "./asset-filters";
 
 type Mode = "Seleção" | "Lista" | "Intervalo";
 
@@ -34,7 +35,7 @@ export function BatchPage() {
   const [list, setList] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState(emptyFilters);
   const [review, setReview] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<{ tag: string; ok: boolean; message: string }[]>([]);
@@ -52,11 +53,8 @@ export function BatchPage() {
     [state.assets],
   );
 
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    if (!q) return available;
-    return available.filter((a) => `${a.tag} ${a.name} ${a.branch}`.toLowerCase().includes(q));
-  }, [available, query]);
+  const filtered = useMemo(() => filterAssets(available, filters), [available, filters]);
+  const filteredSelected = filtered.filter((a) => selected.includes(a.tag)).length;
 
   function tags() {
     if (mode === "Lista") return [...new Set(list.split(/[\s,;]+/).filter(Boolean))];
@@ -149,6 +147,11 @@ export function BatchPage() {
     setError("");
   }
 
+  function unselectFiltered() {
+    const shown = new Set(filtered.map((a) => a.tag));
+    setSelected((s) => s.filter((t) => !shown.has(t)));
+  }
+
   return (
     <>
       <PageHeading
@@ -199,11 +202,31 @@ export function BatchPage() {
 
             {mode === "Seleção" && (
               <>
+                <AssetFilters
+                  assets={available}
+                  value={filters}
+                  onChange={setFilters}
+                  resultCount={filtered.length}
+                />
                 <div className="batch-toolbar">
-                  <SearchInput value={query} onChange={setQuery} />
                   <div className="batch-toolbar-actions">
-                    <Button type="button" variant="outline" size="sm" onClick={selectFiltered} disabled={!filtered.length}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={selectFiltered}
+                      disabled={!filtered.length || filteredSelected === filtered.length}
+                    >
                       Marcar filtrados ({filtered.length})
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={unselectFiltered}
+                      disabled={!filteredSelected}
+                    >
+                      Desmarcar filtrados
                     </Button>
                     <Button
                       type="button"
@@ -212,7 +235,7 @@ export function BatchPage() {
                       onClick={() => setSelected([])}
                       disabled={!selected.length}
                     >
-                      Limpar
+                      Limpar seleção
                     </Button>
                   </div>
                 </div>

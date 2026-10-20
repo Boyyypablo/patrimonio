@@ -35,8 +35,8 @@ export default function App() {
 function Home() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("Todos os serviços");
-  const [selected] = useState<number | null>(null);
-  const setSelected = (index: number | null) => { window.location.href = index === null ? "/" : modules[index].path; };
+  const [selected, setSelected] = useState<number | null>(null);
+  const openModule = (index: number) => { window.location.href = modules[index].path; };
   const [help, setHelp] = useState(false);
   const filtered = modules.filter(m => `${m.name} ${m.description}`.toLocaleLowerCase("pt-BR").includes(query.toLocaleLowerCase("pt-BR")) && (filter === "Todos os serviços" || (filter === "Gestão patrimonial" ? ["box", "move", "qr"].includes(m.icon) : ["chart", "settings"].includes(m.icon))));
   return <div className="home-screen min-h-screen bg-canvas text-ink">
@@ -62,14 +62,14 @@ function Home() {
             <PatrimonyIllustration />
             <div className="relative z-10 flex min-h-[234.5px] flex-col items-start justify-between py-5">
               <h2 className="hero-title text-3xl font-semibold sm:text-[36px]">Cada bem tem uma história.<br/>Cuide de todas elas.</h2>
-              <button onClick={() => setSelected(0)} className="mt-10 inline-flex min-h-[46px] items-center gap-5 rounded-lg bg-white px-4 py-3 text-[15px] font-semibold leading-4 text-brand hover:bg-slate-100">Consultar patrimônios<img src="/assets/1d580.svg" alt="" width="18" height="22" /></button>
+              <button onClick={() => openModule(0)} className="mt-10 inline-flex min-h-[46px] items-center gap-5 rounded-lg bg-white px-4 py-3 text-[15px] font-semibold leading-4 text-brand hover:bg-slate-100">Consultar patrimônios<img src="/assets/1d580.svg" alt="" width="18" height="22" /></button>
             </div>
           </div>
         </section>
         <section className="mt-10" aria-labelledby="services-heading">
           <div className="flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-3"><h2 id="services-heading" className="text-xl font-bold tracking-tight">Seus serviços</h2><span className="rounded-md bg-brand/5 px-2 py-1 text-xs font-medium text-muted">5 módulos</span></div><label className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 sm:w-64"><Icon name="search" className="size-4 text-muted"/><span className="sr-only">Buscar serviço</span><input type="search" name="servico" value={query} onChange={e => setQuery(e.target.value)} placeholder="Buscar serviço..." className="min-w-0 flex-1 bg-transparent py-2 text-base outline-offset-2 sm:text-xs"/></label></div>
           <div className="my-5 flex flex-wrap gap-2">{["Todos os serviços", "Gestão patrimonial", "Administração"].map(f => <button key={f} aria-pressed={filter === f} onClick={() => setFilter(f)} className={`rounded-lg px-3.5 py-2.5 text-xs font-medium ${filter === f ? "bg-brand text-white" : "text-muted hover:bg-white"}`}>{f}</button>)}</div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(m => <button key={m.name} onClick={() => setSelected(modules.indexOf(m))} className="group flex min-h-60 flex-col rounded-xl bg-white p-6 text-start shadow-card transition-shadow hover:shadow-card-hover"><div className="flex w-full items-center justify-between"><span className="flex size-11 items-center justify-center rounded-xl bg-brand/5 text-brand"><Icon name={m.icon} className="size-6"/></span><Icon name="arrow" className="size-4 text-muted group-hover:text-brand"/></div><span className="mt-5 text-[10px] font-semibold uppercase tracking-widest text-muted">{m.category}</span><h3 className="mt-1.5 text-base font-bold tracking-tight">{m.name}</h3><p className="mt-2 text-xs leading-[19.5px] text-muted">{m.description}</p></button>)}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(m => <button key={m.name} onClick={() => openModule(modules.indexOf(m))} className="group flex min-h-60 flex-col rounded-xl bg-white p-6 text-start shadow-card transition-shadow hover:shadow-card-hover"><div className="flex w-full items-center justify-between"><span className="flex size-11 items-center justify-center rounded-xl bg-brand/5 text-brand"><Icon name={m.icon} className="size-6"/></span><Icon name="arrow" className="size-4 text-muted group-hover:text-brand"/></div><span className="mt-5 text-[10px] font-semibold uppercase tracking-widest text-muted">{m.category}</span><h3 className="mt-1.5 text-base font-bold tracking-tight">{m.name}</h3><p className="mt-2 text-xs leading-[19.5px] text-muted">{m.description}</p></button>)}
           </div>
           {filtered.length === 0 && <div className="mt-6 rounded-xl bg-white p-8 text-center"><p>Nenhum serviço encontrado para “{query}”.</p><button onClick={() => { setQuery(""); setFilter("Todos os serviços"); }} className="mt-4 rounded-lg bg-brand px-4 py-3 text-sm text-white">Limpar busca e filtros</button></div>}
         </section>

@@ -103,6 +103,24 @@ export function finishAccounting(state:State,now=Date.now()):State{
  for(const job of state.jobs){if(job.status!=='Em processamento'||job.due>now)continue;let status:Processing['status']='Concluído';try{if(job.fail)throw new Error('Falha no processamento');next=accounting(next,job.period,job.kind);}catch{status='Erro';}next={...next,jobs:next.jobs.map(j=>j.id===job.id?{...j,status,completedAt:new Date(now).toISOString()}:j)};}
  return next;
 }
+export type FilterFacet='branch'|'location'|'responsible'|'center'|'species'|'account'|'status';
+export const filterFacets:{key:FilterFacet;label:string}[]=[{key:'branch',label:'Filial'},{key:'location',label:'Localização'},{key:'responsible',label:'Responsável'},{key:'center',label:'Centro de custo'},{key:'species',label:'Espécie'},{key:'account',label:'Conta contábil'},{key:'status',label:'Situação'}];
+export type AssetFilters={query:string;minValue:string;maxValue:string}&Record<FilterFacet,string[]>;
+export const emptyFilters=():AssetFilters=>({query:'',minValue:'',maxValue:'',branch:[],location:[],responsible:[],center:[],species:[],account:[],status:[]});
+const parseValue=(v:string)=>{const n=Number(v.replace(/\./g,'').replace(',','.'));return v.trim()&&Number.isFinite(n)?n:null;};
+/** Filtros diferentes combinam com E; valores do mesmo filtro combinam com OU. Valor compara o contábil. */
+export function filterAssets(assets:Asset[],f:AssetFilters):Asset[]{
+ const q=f.query.trim().toLowerCase();const min=parseValue(f.minValue);const max=parseValue(f.maxValue);
+ return assets.filter(a=>(!q||[a.tag,a.name,a.description,a.branch,a.location,a.responsible].join(' ').toLowerCase().includes(q))
+  &&filterFacets.every(({key})=>!f[key].length||f[key].includes(String(a[key])))
+  &&(min===null||a.book>=min)&&(max===null||a.book<=max));
+}
+export function activeFilterCount(f:AssetFilters){return filterFacets.reduce((n,{key})=>n+f[key].length,0)+(parseValue(f.minValue)!==null?1:0)+(parseValue(f.maxValue)!==null?1:0);}
+/** Opções de um filtro com a contagem considerando os demais filtros ativos. */
+export function facetOptions(assets:Asset[],f:AssetFilters,key:FilterFacet){
+ const base=filterAssets(assets,{...f,[key]:[]});const values=[...new Set([...assets.map(a=>String(a[key])),...f[key]])].sort((x,y)=>x.localeCompare(y,'pt-BR'));
+ return values.map(value=>({value,count:base.filter(a=>String(a[key])===value).length}));
+}
 /** Extrai a plaqueta de um texto lido no QR Code. Não completa zeros. */
 export function parseTag(text:string):string|null{const m=/plaqueta\D*(\d+)/i.exec(text);if(m?.[1])return m[1];const t=text.trim();return /^\d+$/.test(t)?t:null;}
 export function attachTo(state:State,tag:string,att:Attachment,description:string):State{if(!state.assets.some(a=>a.tag===tag))throw new Error('Plaqueta não encontrada.');return {...state,assets:state.assets.map(a=>a.tag===tag?{...a,attachments:[...a.attachments,att],history:[...a.history,event('Anexo',description)]}:a)};}
