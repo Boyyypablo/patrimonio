@@ -51,7 +51,6 @@ src/features/patrimonio/
 src/lib/                     navegação e helpers
 public/brand/                identidade visual: mutua-logo.png (logo) e mutua-emblema.png (emblema, origem do favicon)
 public/favicon.png           favicon (emblema sem fundo, 128×128)
-Patrimonio - figma/          export do Figma Make usado como referência visual
 MAPA-PROJETO.md              inventário de telas e fluxos (diagramas para o FigJam)
 ```
 
