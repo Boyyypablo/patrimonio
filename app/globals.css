@@ -541,3 +541,26 @@ input,select,textarea{font-size:16px!important}
 .qr-card-actions>button{width:100%;min-height:48px;padding:0 16px;justify-content:center;gap:8px}
 
 .app-session-boot{min-height:100dvh;background:var(--canvas,#f5f7fa)}
+
+/* Legibilidade e toque: piso de 12px para texto e 44px para alvos no mobile (sobrepõe o CSS legado acima). */
+.page-heading button,.page-heading a,.accounting-step button,.segmented button,.aux-nav button,.form-actions button,.detail-section .section-heading button,.label-search button{font-size:14px}
+.page-heading button,.page-heading a{height:auto;min-height:40px}
+.field{font-size:13px}
+.field input,.field textarea,.field select,select,.select-trigger,.select-option,.search-input input{font-size:14px}
+.select-option small{font-size:12px}
+.section-intro,.accounting-step p,.notice{font-size:13px}
+.eyebrow,.home-card-cat,.home-footer,.status-badge,.tab-count,.aux-nav button>span,.step small,.accounting-step small,.accounting-step-copy small,.info-item>span,.data-table th,.data-table td>small,.asset-name small,.table-footer,.timeline-item small,.section-heading>span,.section-heading p{font-size:12px}
+.data-table,.asset-name strong,.info-item>strong,.timeline-item p,.timeline-item strong,.step strong{font-size:13px}
+.tab-strip button{font-size:13px}
+.form-summary p,.form-summary>small,.summary-lock,.competence-stage small,.competence-amount small,.competence-stage .status-badge{font-size:12px}
+.status-badge{padding:4px 8px}
+@media(max-width:767px){
+  .home-tab{min-height:44px}
+  .asset-name{min-height:44px}
+  .data-table td [aria-label^="Ver ficha"]{width:44px;height:44px}
+  .accounting-page .competence-period{min-height:44px;display:flex;align-items:center}
+}
+@media(max-width:479px){
+  .transfer-flow .segmented.batch-modes{display:grid;grid-template-columns:1fr;width:100%}
+  .transfer-flow .segmented.batch-modes button{width:100%;justify-content:center;min-height:44px}
+}
