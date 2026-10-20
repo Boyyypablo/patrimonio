@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, X } from "lucide-react";
+import { useId, useState } from "react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,6 +32,8 @@ type Props = {
 };
 
 export function AssetFilters({ assets, value, onChange, resultCount }: Props) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
   const active = activeFilterCount(value);
 
   function toggle(key: FilterFacet, option: string) {
@@ -59,13 +62,28 @@ export function AssetFilters({ assets, value, onChange, resultCount }: Props) {
 
   return (
     <section className="asset-filters" aria-label="Filtros de patrimônios">
-      <SearchInput
-        value={value.query}
-        onChange={(query) => onChange({ ...value, query })}
-        placeholder="Buscar por plaqueta, nome, filial, local ou responsável..."
-      />
+      <div className="asset-filters-head">
+        <SearchInput
+          value={value.query}
+          onChange={(query) => onChange({ ...value, query })}
+          placeholder="Buscar por plaqueta, nome, filial, local ou responsável..."
+        />
+        <Button
+          type="button"
+          variant={open ? "default" : "outline"}
+          className="asset-filters-toggle"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <SlidersHorizontal size={16} aria-hidden />
+          Filtros
+          {active > 0 && <span className="asset-filters-badge">{active}</span>}
+          <ChevronDown size={16} aria-hidden className="asset-filters-toggle-chevron" />
+        </Button>
+      </div>
 
-      <div className="asset-filters-bar">
+      <div id={panelId} className="asset-filters-bar" hidden={!open}>
         {filterFacets.map(({ key, label }) => {
           const selected = value[key];
           const options = facetOptions(assets, value, key);

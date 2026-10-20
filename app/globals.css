@@ -413,7 +413,15 @@ input,select,textarea{font-size:16px!important}
 .batch-chip:hover{border-color:var(--brand);color:var(--brand)}
 .batch-chip-more{font-size:12px;color:var(--muted-foreground);align-self:center}
 .asset-filters{display:flex;flex-direction:column;gap:10px;margin:16px 0 0}
-.asset-filters-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.asset-filters-head{display:flex;flex-direction:column;gap:8px}
+.asset-filters-head .search-input{flex:1;min-width:0}
+.asset-filters-toggle{min-height:44px;gap:8px;justify-content:center}
+.asset-filters-toggle[aria-expanded=true] .asset-filters-toggle-chevron{transform:rotate(180deg)}
+.asset-filters-toggle-chevron{transition:transform .15s}
+.asset-filters-badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;font-weight:700}
+.asset-filters-toggle[aria-expanded=true] .asset-filters-badge{background:#fff;color:var(--brand)}
+.asset-filters-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--canvas)}
+.asset-filters-bar[hidden]{display:none}
 .asset-filter-trigger{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;min-height:48px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);text-align:left;cursor:pointer}
 .asset-filter-trigger:hover{border-color:var(--brand)}
 .asset-filter-trigger:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
@@ -439,6 +447,7 @@ input,select,textarea{font-size:16px!important}
 .asset-filters+.batch-toolbar{margin-top:4px}
 @media(max-width:639px){.batch-toolbar-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.batch-toolbar-actions>button{min-height:44px;width:100%}.batch-toolbar-actions>button:last-child{grid-column:1/-1}}
 @media(min-width:640px){
+  .asset-filters-head{flex-direction:row;align-items:center}
   .asset-filters-bar{grid-template-columns:repeat(4,minmax(0,1fr))}
   .asset-filter-range{grid-column:auto}
   .asset-filters-summary{flex-direction:row;align-items:center;flex-wrap:wrap}
